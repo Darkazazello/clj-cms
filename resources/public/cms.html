@@ -1,7 +1,63 @@
 <html>
 <head>
+  
 </head>
 <body>
-  Hello
+  <link rel="stylesheet" type="text/css" href="/markitup/skins/markitup/style.css" />
+  <link rel="stylesheet" type="text/css" href="/markitup/sets/markdown/style.css" />
+  <link rel="stylesheet" href="css/jqtree.css"/>
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="/markitup/jquery.markitup.js"></script>
+  <script type="text/javascript" src="/markitup/sets/markdown/set.js"></script>
+  <script type="text/JavaScript" src="/js/markdown.config.js"></script>
+  <script src="js/tree.jquery.js"></script>
+  <script language="javascript">
+    var data = [
+    {
+        label: 'node1',
+        children: [
+            { label: 'child1' },
+            { label: 'child2' }
+        ]
+    },
+    {
+        label: 'node2',
+        children: [
+            { label: 'child3' }
+        ]
+    }
+];
+    $(document).ready(function()	{
+      $('#markdown').markItUp(myMarkdownSettings);
+ $('#tree1').tree({
+        data: data
+    });
+    });
+    
+  </script>
+  
+<style>
+#tree1 {
+position: absolute;
+top: 0;
+height: 100%;
+left: 0;
+width: 100%;
+display: block;
+	}
+</style>
+<div id="tree1"></div>
+<style>
+  #edit-area {
+  position:float;
+  height:100%;
+  width : 100%;
+}
+</style>
+<div id="edit-area">
+<textarea id="markdown" cols="80" rows="20">
+	...markdown stuff...
+</textarea>
+</div>
 </body>
 </html>

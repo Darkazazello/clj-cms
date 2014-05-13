@@ -6,4 +6,5 @@
       :password "cms"
       :schema "cmsdb"
       :records "record"
-      :users "user"}}
+      :users "user"
+      :children "parent_2_children"}}

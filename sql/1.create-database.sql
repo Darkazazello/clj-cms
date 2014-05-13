@@ -1,4 +1,4 @@
-drop database cmsdb if exists;
+drop database cmsdb;
 create database cmsdb default character set=UTF8;
 grant all on cmsdb.* to cms@localhost identified by 'cms';
 drop table if exists cmsdb.record;
@@ -13,7 +13,7 @@ create table cmsdb.record(
        locked_at datetime default null,  
        name varchar(1024) not null, 
        body text,
-       foreign key (locked_by) references cmsdb.user(id)
+       CONSTRAINT foreign key (locked_by) references cmsdb.user(id)
 ) engine=InnoDB character set=UTF8;
 
 create table cmsdb.user(
@@ -22,4 +22,11 @@ create table cmsdb.user(
        password varchar(255) not null
  ) engine=InnoDB character set=UTF8;
 
-insert 
+alter table cmsdb.record add column file_path varchar(255) default null;
+
+create table cmsdb.parent_2_children(
+       parent_id int(11) not null,
+       child_id int(11) not null,
+       CONSTRAINT foreign key(parent_id) references cmsdb.record(id),
+       CONSTRAINT foreign key(child_id) references cmsdb.record(id)
+)engine=InnoDB character set=UTF8;

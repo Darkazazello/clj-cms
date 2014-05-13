@@ -11,6 +11,9 @@
 
 (defdb cms-db db-con)
 
+(defentity children
+  (table (config :db :children)))
+
 (defentity record
   (pk :id)
   (table  (config :db :records)))
@@ -19,11 +22,30 @@
   (pk :id)
   (table (config :db :users)))
 
-(defn get-tree [] (select record))
+(defn get-tree []
+  (letfn [(get-children [id] (select children
+                              (fields :child_id)
+                                (where {:parent_id [= id]})))
+        (fetch-children [id] (select record
+                                (join children (= :children.child_id :id))
+                                (where {:children.parent_id [= id]})))
+        (fetch-record [id] (select record
+                              (where {:id [= id]})))
+        (build-tree [node-ids accum]
+                     (if (empty? node-ids)
+                       accum
+                       (let [new-nodes (map #(assoc (fetch-record %)  :children (get-children %)) node-ids)]
+                         (build-tree (reduce #(conj %1 (:children new-nodes)) [] new-nodes) (conj accum new-nodes)))))]
+    (build-tree (select record
+                        (fields :id)
+                        (where {:is_root [= true]})) [])))
 
 (defn save-new [{:keys [name body parent-id is-leaf is-root]
-                   :or {parent-id nil is-leaf false is-root false body ""}}]
-  (insert record (values {:name name :body body :parent_id parent-id :is_leaf is-leaf :is_root is-root})))
+                 :or {parent-id nil is-leaf false is-root false body ""}}]
+  (transaction
+   (let [data {:name name :body body :parent_id parent-id :is_leaf is-leaf :is_root is-root}
+         record_id (insert record (values data))]
+     (insert children (values {:parent_id parent-id :child_id record_id})))))     
 
 (defn lock-node [{:keys [id user-id] :or {user-id -1}}]
   (transaction
@@ -50,6 +72,10 @@
 
 (defn save-old [& {:keys [id name body parent-id is-leaf is-root]
                    :or {parent-id nil is-leaf false is-root false body ""}}]
-  (update record (set-fields {:name name :body body :parent_id parent-id
-                              :is_leaf is-leaf :is_root is-root :is_locked 0 :locked_by nil :locked_at nil})
-          (where {:id [= id]})))
+  (transaction
+   (let [fields {:name name :body body :parent_id parent-id
+                 :is_leaf is-leaf :is_root is-root :is_locked 0 :locked_by nil :locked_at nil}]
+     (update record (set-fields fields)
+             (where {:id [= id]}))
+     (update children (set-fields {:parent_id parent-id})
+             (where {:child_id [= id]})))))
